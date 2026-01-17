@@ -1,5 +1,6 @@
 #include "views/game_list_tab.hpp"
 #include "utils/utils.hpp"
+#include "utils/config.hpp"
 #include "views/mods_list.hpp"
 
 #include <borealis.hpp>
@@ -36,6 +37,12 @@ void GameData::didSelectRowAt(brls::RecyclerFrame* recycler, brls::IndexPath ind
         dialog->open();
         return;
     }
+    if(game.getGamebananaID() == -1) {
+        auto dialog = new brls::Dialog("menu/notify/request_error"_i18n);
+        dialog->addButton("hints/ok"_i18n, []() {});
+        dialog->open();
+        return;
+    }
     auto modListTab = new ModListTab(game);
     recycler->present(modListTab);    
 }
@@ -66,6 +73,16 @@ GameListTab::GameListTab() {
     recycler->estimatedRowHeight = 100;
     recycler->registerCell("Cell", []() { return GameCell::create();});
     recycler->setDataSource(gameData, false);
+
+    #ifndef NDEBUG
+    cfg::Config config;
+    if (config.getWireframe()) {
+        this->setWireframeEnabled(true);
+        for(auto& view : this->getChildren()) {
+            view->setWireframeEnabled(true);
+        }
+    }
+    #endif
 }
 
 brls::View* GameListTab::create() {
